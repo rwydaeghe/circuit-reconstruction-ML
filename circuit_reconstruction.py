@@ -1,0 +1,31 @@
+#! /usr/bin/env
+
+import argparse
+import os
+import inspect
+from pathlib import Path
+import random
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Use deep neural networks to reconstruct circuits")
+    parser.add_argument(
+        "operation",
+        choices=["train", "generate"],
+        help="operation to perform"
+    )
+    parser.add_argument(
+        "model",
+        choices=["TODO"],
+        help="model to use"
+    )
+    parser.add_argument(
+        "source",
+        help="source of input files to use"
+    )
+    parser.add_argument(
+        "dest",
+        help="dest of output netlist files"
+    )
+    # TODO add more args
+    args = parser.parse_args()
