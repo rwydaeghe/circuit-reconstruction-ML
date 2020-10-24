@@ -5,6 +5,7 @@ import os
 import inspect
 from pathlib import Path
 import random
+import circuitgen
 
 
 def main():
@@ -29,3 +30,18 @@ def main():
     )
     # TODO add more args
     args = parser.parse_args()
+    data = circuitgen.data.read_netlist(args.source)
+    model = getattr(circuitgen.models,args.model)(len(data))
+    filename = "{}-{}".format(args.source, args.model)
+    weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
+    if args.operation == "train":
+        # TODO start training
+        pass
+
+    else:
+        # TODO start generating
+        pass
+
+    
+if __name__ == "__main__":
+    main()
