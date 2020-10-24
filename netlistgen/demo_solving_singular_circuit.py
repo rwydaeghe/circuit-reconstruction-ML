@@ -1,18 +1,18 @@
 # import SpicePy modules
-import netlist as ntl
-from netsolve import net_solve
+from spicepy import netlist as ntl
+from spicepy.netsolve import net_solve
 import matplotlib.pyplot as plt
 plt.ion()
 
 plt.close('all')
 
 # Non singular RLC circuit
-net = ntl.Network('my network.net')
+net = ntl.Network('my_network.net')
 net_solve(net)
 net.plot()
 
 # Singular RLC circuit due to three isolating capacitors failing to create a DC path to ground
-# net = ntl.Network('singular isolating capacitors.net')
+# net = ntl.Network('singular_isolating_capacitors.net')
 # net_solve(net)
 # net.plot()
 

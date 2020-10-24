@@ -1,14 +1,15 @@
 # import SpicePy modules
-import netlist as ntl
-from netsolve import net_solve
+from spicepy import netlist as ntl
+from spicepy.netsolve import net_solve
 import matplotlib.pyplot as plt
 plt.ion()
 
 # read netlist
-net = ntl.Network('tran_network2.net')
+net = ntl.Network('tran_network1.net')
 
 # compute the circuit solution
 net_solve(net)
 
 # plot results
 net.plot()
+
