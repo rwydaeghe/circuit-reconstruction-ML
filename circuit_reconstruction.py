@@ -35,13 +35,10 @@ def main():
     filename = "{}-{}".format(args.source, args.model)
     weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
     if args.operation == "train":
-        # TODO start training
-        pass
-
+        circuitgen.train.train(model, data, weights_filepath)
     else:
-        # TODO start generating
-        pass
+        generated_data = circuitgen.generate.generate(model, data, weights_filepath)
 
-    
+
 if __name__ == "__main__":
     main()
