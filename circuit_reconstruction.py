@@ -35,8 +35,7 @@ def main():
     weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
     if args.operation == "train":
         circuitgen.train.train(weights_filepath)
-    elif args.operation == "evaluate":
-        circuitgen.train.evaluate_mlp(args.source)
+
     else:
         generated_data = circuitgen.generate.generate(weights_filepath)
 

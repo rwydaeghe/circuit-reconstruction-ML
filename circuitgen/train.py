@@ -6,13 +6,13 @@ def train(dirpath):
     input_netlist, output = circuitgen.data.read_netlist(dirpath)
     input_analyses = circuitgen.data.read_transiant_analyses(dirpath)
 
-    cutoff = int(len(input_netlist/100*80))
+    cutoff = int(len(input_netlist)/100*80)
     train_netlist = input_netlist[:cutoff]
     test_netlist = input_netlist[cutoff+1:]
     train_analyses = input_analyses[:cutoff]
     test_analyses = input_analyses[cutoff + 1:]
     train_output = output[:cutoff]
-    test_output = output[cutoff:]
+    test_output = output[cutoff+1:]
 
     model = circuitgen.models.regression_model(len(output))
 
