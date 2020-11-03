@@ -152,7 +152,9 @@ class Network:
         self.ib = None
         self.pb = None
         self.unit_prefix = {'meg': 'e6', 'f': 'e-15', 'p': 'e-12', 'n': 'e-9', 'u': 'e-6', 'm': 'e-3', 'k': 'e3', 'g': 'e9', 't': 'e12'}
-
+        
+        self.is_singular=None
+        
         # common attributes
         (self.names,
          self.values,

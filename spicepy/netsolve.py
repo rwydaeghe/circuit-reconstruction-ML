@@ -11,10 +11,9 @@
 # ==================
 # imported modules
 # ==================
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve, svds
 import numpy as np
 from spicepy import transient_sources as tsr
-
 
 def dc_solve(net):
     """
@@ -146,7 +145,15 @@ def transient_solve(net):
     K = net.C + 0.5 * h * net.G
     for k in range(1, net.t.size):
         rhs = (net.C - 0.5 * h * net.G) * net.x[:, k - 1] + 0.5 * h * (rhs_fun(net.t[k - 1]) + rhs_fun(net.t[k]))
+        #_,sv,_=svds(K,min(K.shape)-1)
+        #print(sv)
+        #if np.any(sv>1(e):
+        #    print(svds(K,min(K.shape)-1))
+        #net.x[:, k] = spsolve(K, rhs)
         net.x[:, k] = spsolve(K, rhs)
+        #print('Singular!')
+        #net.is_singular=True
+        #net.x.fill(np.nan)
 
 
 def net_solve(net):

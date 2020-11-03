@@ -8,7 +8,6 @@ import random
 import numpy
 import circuitgen
 
-
 def main():
     parser = argparse.ArgumentParser(description="Use deep neural networks to reconstruct circuits")
     parser.add_argument(

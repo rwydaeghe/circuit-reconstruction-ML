@@ -1,0 +1,8 @@
+* Example of transient analysis
+V1 0 1 8
+C1 1 2 5u
+R2 1 2 1e10
+V2 1 2 5
+R1 2 0 5
+.op
+.plot v(V1) i(V1) v(C1) i(C1)
