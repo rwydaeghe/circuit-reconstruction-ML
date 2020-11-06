@@ -13,30 +13,32 @@ import pickle
 from tqdm import tqdm
 
 class Read_and_write(object):
-    def __init__(self,file_name,number_in_dataset=None):
+    def __init__(self,file_name,number_in_dataset=None, allow_C=True):
         #reading
         self.file_name=file_name
         self.number_in_dataset=number_in_dataset
-        self.amount_of_components = {'R': 0, 'L': 0, 'C': 0, 'I': 0}
+        self.amount_of_components = {'R': 0, 'L': 0, 'C': 0, 'V': 0, 'I': 0}
         self.nodes = []
         self.neighbours = {}
         self.read_and_write_from_line = 0
         self.transient_data=None
+        self.is_singular=None
         
         #writing
         self.allow_dangling_bonds=True
-        """
-        self.component_space = {'R': np.linspace(1, 10e0, 10),
-                                'L': np.linspace(1e-3, 10e-3, 10)}  # ,
-                              # 'C': np.linspace(1e-6,10e-6,10)}
-        C does not work yet since these will often introduce 
-        floating nodes as there's no DC path to ground
-        """
-        self.component_space = {'R': np.linspace(1, 10e0, 10),
-                                'L': np.linspace(1e-3, 10e-3, 10),
-                                'C': np.linspace(1e-6,10e-6,10)}
-        
-        
+        self.allow_C=allow_C
+        if self.allow_C:
+            self.component_space = {'R': np.linspace(1, 10e0, 10),
+                                    'L': np.linspace(1e-3, 10e-3, 10),
+                                    'C': np.linspace(1e-6,10e-6,10)}
+        else:
+            
+            self.component_space = {'R': np.linspace(1, 10e0, 10),
+                                    'L': np.linspace(1e-3, 10e-3, 10)}  # ,
+                                  # 'C': np.linspace(1e-6,10e-6,10)}
+            #C does not work yet since these will often introduce 
+            #floating nodes as there's no DC path to ground
+                    
     def read_network(self):
         with open(self.file_name, "r") as f:
             for n, line in enumerate(f):
@@ -96,9 +98,8 @@ class Read_and_write(object):
             label = component_type + '1'
         #self.amount_of_components[component_type]+=1
     
-        lines = open(self.file_name, 'r').readlines()
-        lines.insert(self.read_and_write_from_line, ' '.join([label, str(port1), str(port2), str(component_value), '\n']))
-        open(self.file_name, 'w').write(''.join(lines))
+        line=' '.join([label, str(port1), str(port2), str(component_value), '\n'])
+        self.write_to_line(line, self.read_and_write_from_line)
         
     def add_random_component(self):
         component_type = random.choice(list(self.component_space.keys()))
@@ -107,20 +108,68 @@ class Read_and_write(object):
 
     def compute_transients(self):
         self.net=netlist.Network(self.file_name)
-        net_solve(self.net)
+        self.is_singular=False
+        try:
+            net_solve(self.net)
+        except:
+            print('Some exception occured trying to compute transients of file named '+self.file_name+'!')
+            self.is_singular=True
         self.transient_data=self.net.x
         
+        # Catch singular matrices or other errors:
+        if self.transient_data is not None:
+            if np.nan in self.transient_data[:,0]: 
+                print('Your matrix was probably singular as the results contain nan...')
+                self.is_singular=True
+        
     def plot(self, content_list=None):
+        if content_list=='all_V':
+            content_list=[]
+            for component_type in self.amount_of_components.keys():
+                for number in range(1,self.amount_of_components[component_type]+1):
+                    content_list.append('v('+component_type+str(number)+')')
+
+        if content_list=='all_I':
+            content_list=[]
+            for component_type in self.amount_of_components.keys():
+                for number in range(1,self.amount_of_components[component_type]+1):
+                    content_list.append('i('+component_type+str(number)+')')
+
+        if content_list=='all':
+            content_list=[]
+            for component_type in self.amount_of_components.keys():
+                for number in range(1,self.amount_of_components[component_type]+1):
+                    content_list.append('v('+component_type+str(number)+')')
+                    content_list.append('i('+component_type+str(number)+')')
+                
         if content_list is None:
             self.net.plot() #plots whatever is already in the netlist
         else:
-            plot_command='.plot' + ' '.join(content_list) + '\n'
-            lines = open(self.file_name, 'r').readlines()
-            lines.append(plot_command)
-            self.compute_transients() #I could probably not do this and use plot command
-            self.net.plot()
-        
-    
+            plot_command='.plot ' + ' '.join(content_list) + '\n'
+            self.write_to_line(plot_command, self.read_and_write_from_line+1)
+            self.delete_last_line()
+            self.compute_transients() #I could probably not do this and use plot command and self.transient_data
+            # TO DO: figure out how to give current figure title
+            try:
+                self.net.plot()
+                plt.title(self.file_name)
+            except:
+                pass
+            if self.is_singular:
+                plt.title('The matrix is singular which is why you do not see anything')
+            plt.show()
+            plt.pause(.1)
+                
+    def delete_last_line(self):
+        lines = open(self.file_name, 'r').readlines()
+        lines=lines[:-1]
+        open(self.file_name, 'w').write(''.join(lines))
+                
+    def write_to_line(self, line, line_number):
+        lines = open(self.file_name, 'r').readlines()
+        lines.insert(line_number, line)
+        open(self.file_name, 'w').write(''.join(lines))
+
     def write_more_network(self,amount_of_components):
         for i in range(amount_of_components - 1):
             self.add_random_component()
@@ -146,7 +195,7 @@ class Read_and_write(object):
         open(self.file_name,'w').write(''.join(new_lines))
         
 class Generate_data():
-    def __init__(self, basic_file, target_dir='data/', seed=None):
+    def __init__(self, basic_file, target_dir, seed=None):
         self.basic_file=basic_file
         self.target_dir=target_dir
         if target_dir[-1] != '/':
@@ -154,23 +203,33 @@ class Generate_data():
         self.read_and_write_objects=[]
         self.seed=seed
         random.seed(self.seed) #a None seed is actually no seed
+        
+    def read_dir(self):
+        import glob
+        for file in glob.glob(self.target_dir+'*.net'):
+            if self.basic_file[:-len('.net')] in file:
+                id_number=int(file.split(self.basic_file[:-len('.net')]+'_')[1].split('.net')[0])
+                rw_obj=Read_and_write(file,id_number)
+                self.read_and_write_objects.append(rw_obj)
+                rw_obj.read_network()
                 
     def clone_file(self, amount):
         copied_contents=open(self.basic_file,'r').readlines()
         for i in range(1,amount+1):
-            name=self.target_dir+self.basic_file[:-4]+'_'+str(i)+'.net'
+            name=self.target_dir+self.basic_file[:-len('.net')]+'_'+str(i)+'.net'
             self.read_and_write_objects.append(Read_and_write(name,i))
             open(name,'w').write(''.join(copied_contents))
             
     def delete_files(self):
         # please be careful with this command
+        # deletes everything in the directory containing basic file name
         # e.g. if you set the target dir to a file containing code, you might lose it
         import os
         import glob
         
         for file in glob.glob(self.target_dir+'*'):
             #small protection
-            if self.basic_file[:-4]+'_' in file:
+            if self.basic_file[:-len('.net')]+'_' in file:
                 os.remove(file)
           
     def varied_values_data_set(self, size):
@@ -178,18 +237,56 @@ class Generate_data():
         for rw_obj in tqdm(self.read_and_write_objects):
             rw_obj.write_new_values()
             rw_obj.compute_transients()
-            transient_data_name=self.target_dir+self.basic_file[:-4]+'_trans_data_'+str(rw_obj.number_in_dataset)+'.pkl'
+            transient_data_name=self.target_dir+self.basic_file[:-len('.net')]+'_trans_data_'+str(rw_obj.number_in_dataset)+'.pkl'
             with open(transient_data_name,'wb') as f:
                 pickle.dump(rw_obj.transient_data,f)
+        #to do: dump the time axis on here. Is it the same always?
+        
+    def varied_topology_data_set(self, size, allow_C):
+        self.clone_file(size)
+        for rw_obj in tqdm(self.read_and_write_objects):
+            rw_obj.allow_C=allow_C
+            rw_obj.write_more_network(int(random.random()*5))
+            rw_obj.compute_transients()
+            transient_data_name=self.target_dir+self.basic_file[:-len('.net')]+'_trans_data_'+str(rw_obj.number_in_dataset)+'.pkl'
+            with open(transient_data_name,'wb') as f:
+                pickle.dump(rw_obj.transient_data,f)
+        #to do: dump the time axis on here. Is it the same always?
                 
-    def varied_topology_data_set(self, size):
-        print('To do!')
-        #basically just use the write_more_network and clone_files methods
-        #check for valid networks
-    
+    def plot(self, data_files_ids, **kwargs):
+        if data_files_ids=='all':
+            data_files_ids=[]
+            for rw_obj in self.read_and_write_objects:
+                data_files_ids.append(rw_obj.number_in_dataset)
+        for id_number in data_files_ids:
+            for rw_obj in self.read_and_write_objects:
+                if rw_obj.number_in_dataset == id_number:
+                    rw_obj.plot(**kwargs)
+                    break
+   
 plt.close('all')
 
-data_set=Generate_data('RLC.net')
-data_set.delete_files()
-data_set.varied_values_data_set(100)
-data_set.read_and_write_objects[0].plot()
+# CREATE
+
+#you still have to create the target directory
+
+"""
+data_set_1=Generate_data('RLC.net', target_dir='data/varied_values_data/', seed=1)
+data_set_1.delete_files() #be careful
+data_set_1.varied_values_data_set(size=10)
+"""
+
+"""
+data_set_2=Generate_data('RLC.net', target_dir='data/varied_topology_data/', seed=2)
+data_set_2.delete_files() #be careful
+data_set_2.varied_topology_data_set(size=10, allow_C=False)
+"""
+
+# READ
+
+"""
+data_set_2=Generate_data('RLC.net', target_dir='data/varied_topology_data/', seed=2)
+data_set_2.read_dir()
+data_set_2.plot('all',content_list='all_I')
+"""
+
