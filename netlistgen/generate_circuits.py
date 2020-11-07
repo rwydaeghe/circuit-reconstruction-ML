@@ -114,7 +114,7 @@ class Read_and_write(object):
         except:
             print('Some exception occured trying to compute transients of file named '+self.file_name+'!')
             self.is_singular=True
-        self.transient_data=self.net.x
+        self.transient_data=self.net.x #TO DO: wrong, needs to be get_voltage
         
         # Catch singular matrices or other errors:
         if self.transient_data is not None:
@@ -273,7 +273,7 @@ plt.close('all')
 """
 data_set_1=Generate_data('RLC.net', target_dir='data/varied_values_data/', seed=1)
 data_set_1.delete_files() #be careful
-data_set_1.varied_values_data_set(size=10)
+data_set_1.varied_values_data_set(size=100)
 """
 
 """
@@ -285,8 +285,9 @@ data_set_2.varied_topology_data_set(size=10, allow_C=False)
 # READ
 
 """
-data_set_2=Generate_data('RLC.net', target_dir='data/varied_topology_data/', seed=2)
-data_set_2.read_dir()
-data_set_2.plot('all',content_list='all_I')
+#data_set_2=Generate_data('RLC.net', target_dir='data/varied_topology_data/', seed=2)
+data_set_1=Generate_data('RLC.net', target_dir='data/varied_values_data/', seed=1)
+data_set_1.read_dir()
+data_set_1.plot('all',content_list='all_I')
 """
 
