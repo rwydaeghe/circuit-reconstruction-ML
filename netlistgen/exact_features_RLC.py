@@ -36,7 +36,7 @@ for i,rw_obj in tqdm(enumerate(data_set_1.read_and_write_objects)):
         values[:,i]=rw_obj.net.values[1:]
         features[:,i]=values_to_features(values[:,i])
         times[:,i]=rw_obj.net.t
-        signals[:,i]=rw_obj.net.get_voltage('R1')
+        signals[:,i]=rw_obj.net.get_current('R1')
 
 class Training_data_set(object):
     def __init__(self,values,features,times,signal):
