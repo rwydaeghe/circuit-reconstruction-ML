@@ -253,7 +253,7 @@ class Network:
             # look for transient sources (if analysis is .tran)
             if analysis[0] == '.tran':
                 # loop on all possible transient sources
-                time_sources = ['pwl', 'pulse', 'sin', 'exp']
+                time_sources = ['dirac', 'pwl', 'pulse', 'sin', 'exp']
                 for source in time_sources:
                     # when one is found
                     if source in line.lower():

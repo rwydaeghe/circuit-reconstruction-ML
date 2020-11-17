@@ -1,0 +1,10 @@
+*
+
+.subckt MyFirstWorkspace_lib:cell_3:schematic P1 
+CC1 P1 0 C=5e-06 M $.model $W $L
+CC2 P1 0 C=4e-06 M $.model $W $L
+RR1 _net5 P1 5 M $.model $W $L
+.ends MyFirstWorkspace_lib:cell_3:schematic
+
+
+.end

@@ -14,6 +14,25 @@
 import numpy as np
 from scipy.interpolate import interp1d
 
+def dirac(dt, t=None):
+    # check presence of time input
+    if t is None:
+        raise TypeError('Missing time input')
+
+    # check if t is scalar
+    if isinstance(t, (int, float)):
+        # convert to numpy array
+        t = np.array([t])
+    out=np.zeros_like(t)
+    A=-2/dt # normalization of a rectangular dirac function: ampl scales as 1/dt
+    if t==0:
+        out[0]=A
+
+    # if input is scalar convert out to scalar too
+    if out.size == 1:
+        out = np.asscalar(out)
+
+    return out
 
 def pwl(pairs, t):
     """
@@ -45,7 +64,6 @@ def pwl(pairs, t):
     out = fun(t)
 
     return out
-
 
 def pulse(V1, V2, Td=0, Tr=None, Tf=None, Pw=None, Period=None, t=None):
     """

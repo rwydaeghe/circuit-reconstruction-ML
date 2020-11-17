@@ -1,0 +1,15 @@
+
+hpeesofsim (*) 530.shp Aug 11 2020, MINT version 5
+    (64-bit windows built: Wed Aug 12, 2020 02:42:05 +0000)
+
+Warning detected by hpeesofsim in topology check during circuit set up.
+    Number of nodes with no DC path to ground (topology corrected): 1
+
+
+
+TRAN Tran1[1] <MyFirstWorkspace_lib:cell_3:schematic>   time=(0 s->1.2 ms)
+
+
+Resource usage:
+  Total stopwatch time     =     3.26 seconds.
+

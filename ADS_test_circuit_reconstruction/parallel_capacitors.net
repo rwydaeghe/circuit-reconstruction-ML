@@ -1,0 +1,13 @@
+; Translated with ADS Netlist Translator (*) 530.shp Aug  8 2020
+;
+;Mapping SPICE functions file to the Netlist
+#ifndef SPCFUNCTIONS_FILE
+#define SPCFUNCTIONS_FILE
+#include "$HPEESOF_DIR/links/spice/spicefunctions.net"
+#endif
+;
+; Example of transient analysis
+V_Source:v1 0 _node1 Vdc=8
+R:r1 _node1 _node2 R=5
+C:c1 _node2 0 C=5u
+C:c2 _node2 0 C=4u

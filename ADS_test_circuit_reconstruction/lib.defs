@@ -1,0 +1,7 @@
+INCLUDE $HPEESOF_DIR/oalibs/analog_rf.defs
+DEFINE MyFirstWorkspace_lib MyFirstWorkspace_lib
+ASSIGN MyFirstWorkspace_lib libMode shared
+DEFINE parallel_capacitors_lib parallel_capacitors_lib
+ASSIGN parallel_capacitors_lib libMode shared
+DEFINE parallel_capacitors1_lib parallel_capacitors1_lib
+ASSIGN parallel_capacitors1_lib libMode shared

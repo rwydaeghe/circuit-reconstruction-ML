@@ -1,0 +1,12 @@
+
+hpeesofsim (*) 530.shp Aug 11 2020, MINT version 5
+    (64-bit windows built: Wed Aug 12, 2020 02:42:05 +0000)
+
+
+
+TRAN Tran1[1] <MyFirstWorkspace_lib:cell_1:schematic>   time=(0 s->100 ns)
+
+
+Resource usage:
+  Total stopwatch time     =     3.23 seconds.
+

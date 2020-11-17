@@ -232,15 +232,16 @@ class Generate_data():
             if self.basic_file[:-len('.net')]+'_' in file:
                 os.remove(file)
           
-    def varied_values_data_set(self, size):
+    def varied_values_data_set(self, size, write_to_pkl=True):
         self.clone_file(size)
         for rw_obj in tqdm(self.read_and_write_objects):
             rw_obj.write_new_values()
             rw_obj.compute_transients()
             transient_data_name=self.target_dir+self.basic_file[:-len('.net')]+'_trans_data_'+str(rw_obj.number_in_dataset)+'.pkl'
-            with open(transient_data_name,'wb') as f:
-                pickle.dump(rw_obj.transient_data,f)
-        #to do: dump the time axis on here. Is it the same always?
+            if write_to_pkl:
+                with open(transient_data_name,'wb') as f:
+                    pickle.dump(rw_obj.transient_data,f)
+                #to do: dump the time axis on here. Is it the same always?
         
     def varied_topology_data_set(self, size, allow_C):
         self.clone_file(size)
@@ -249,9 +250,10 @@ class Generate_data():
             rw_obj.write_more_network(int(random.random()*5))
             rw_obj.compute_transients()
             transient_data_name=self.target_dir+self.basic_file[:-len('.net')]+'_trans_data_'+str(rw_obj.number_in_dataset)+'.pkl'
-            with open(transient_data_name,'wb') as f:
-                pickle.dump(rw_obj.transient_data,f)
-        #to do: dump the time axis on here. Is it the same always?
+            if write_to_pkl:
+                with open(transient_data_name,'wb') as f:
+                    pickle.dump(rw_obj.transient_data,f)
+                #to do: dump the time axis on here. Is it the same always?
                 
     def plot(self, data_files_ids, **kwargs):
         if data_files_ids=='all':
@@ -263,6 +265,26 @@ class Generate_data():
                 if rw_obj.number_in_dataset == id_number:
                     rw_obj.plot(**kwargs)
                     break
+                
+    def collect_all_transients(self, v_or_i, arg):
+        # this method assumes all data has same t vector, 
+        # and the transients have already been computed,
+        # and that arg is the same for all networks
+        # so ideal for the varied_values_data_set 
+        t=self.read_and_write_objects[0].net.t[1:]
+        dt=t[1]-t[0]
+        t-=dt/2
+        data=np.zeros((len(t),len(self.read_and_write_objects)))
+        for i,rw_obj in enumerate(self.read_and_write_objects):
+            if v_or_i=='v':
+                foo=rw_obj.net.get_voltage(arg)
+                data[:,i]=foo[1:]
+            elif v_or_i=='i':
+                foo=rw_obj.net.get_current(arg)
+                data[:,i]=foo[1:]
+                
+        return data, t
+        
    
 plt.close('all')
 
@@ -270,11 +292,11 @@ plt.close('all')
 
 #you still have to create the target directory
 
-"""
+#"""
 data_set_1=Generate_data('RLC.net', target_dir='data/varied_values_data/', seed=1)
-data_set_1.delete_files() #be careful
+#data_set_1.delete_files() #be careful
 data_set_1.varied_values_data_set(size=100)
-"""
+#"""
 
 """
 data_set_2=Generate_data('RLC.net', target_dir='data/varied_topology_data/', seed=2)
@@ -284,10 +306,16 @@ data_set_2.varied_topology_data_set(size=10, allow_C=False)
 
 # READ
 
-"""
+#"""
 #data_set_2=Generate_data('RLC.net', target_dir='data/varied_topology_data/', seed=2)
-data_set_1=Generate_data('RLC.net', target_dir='data/varied_values_data/', seed=1)
-data_set_1.read_dir()
-data_set_1.plot('all',content_list='all_I')
-"""
+#data_set_1=Generate_data('RLC.net', target_dir='data/varied_values_data/', seed=1)
+#data_set_2.read_dir()
+#data_set_2.plot('all',content_list='all_I')
+#"""
+
+data_set_1.plot([1,2,3])
+data, t = data_set_1.collect_all_transients('i','R1')
+import scipy.io
+scipy.io.savemat('varied_values_data_set.mat', {"data": data,"t": t})
+
 
