@@ -2,7 +2,7 @@ from keras.models import Sequential
 
 from keras.layers import Input, concatenate, Dense
 from keras.models import Model
-
+from keras.constraints import NonNeg
 
 def regression_model(size):
 
@@ -22,3 +22,11 @@ def regression_model(size):
 
     return model
 
+def features_to_values():
+    model = Sequential()
+    model.add(Dense(20, input_shape=(3,), activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dense(9, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dense(9, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dense(3))
+    model.compile(loss='mae', optimizer='adam',metrics=["accuracy"])
+    return model
