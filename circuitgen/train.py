@@ -43,10 +43,16 @@ def train_features_to_value(features,values,data):
     features = np.transpose(features)
     values = np.transpose(data.values)
     cross_Validation(features,values)
-    # print(train_values)
+    # # print(train_values)
+    # train_features = features[:80]
+    # train_values = values[:80]
+    # test_features = features[:80]
+    # train_values[:, 1] *= 1000
+    # train_values[:, 2] *= 1000000
+    #
     # test_values = values[81:]
     # model = circuitgen.models.features_to_values()
-    # model.fit(train_features, train_values,epochs=1000, batch_size=1)
+    # model.fit(train_features, train_values,epochs=300, batch_size=1)
     # model.summary()
     # for i in range(len(test_features)):
     #     predict = model.predict(np.reshape(test_features[i],(1,3)))
@@ -58,6 +64,8 @@ def cross_Validation(input, output):
     fold_no = 1
     acc_per_fold = []
     loss_per_fold = []
+    output[:, 1] *= 1000
+    output[:, 2] *= 1000000
     for train, test in kfold.split(input, output):
 
         model = circuitgen.models.features_to_values()
