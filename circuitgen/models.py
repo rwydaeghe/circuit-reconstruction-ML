@@ -35,3 +35,51 @@ def features_to_values():
     model.add(Dense(3))
     model.compile(loss='mean_squared_error', optimizer='adam',metrics=["accuracy"])
     return model
+
+
+def regression_chain_start():
+    model = Sequential()
+    model.add(Dense(20, input_shape=(3,),activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(10, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(5,activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(1, activation='linear', kernel_constraint=NonNeg()))
+    model.compile(loss='mae', optimizer='adam')
+    return model
+
+
+def regression_chain_middle():
+    model = Sequential()
+    model.add(Dense(20, input_shape=(4,),activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(10, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(5,activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(1, activation='linear', kernel_constraint=NonNeg()))
+    model.compile(loss='mae', optimizer='adam')
+    return model
+
+
+def regression_chain_end():
+    model = Sequential()
+    model.add(Dense(20, input_shape=(5,),activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(10, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(5, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(1, activation='linear', kernel_constraint=NonNeg()))
+    model.compile(loss='mae', optimizer='adam')
+    return model

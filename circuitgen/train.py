@@ -6,6 +6,9 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import RepeatedKFold
 from sklearn.model_selection import KFold
+from sklearn.multioutput import MultiOutputRegressor, RegressorChain
+from sklearn.linear_model import LinearRegression
+
 def train(dirpath):
     input_netlist, output = circuitgen.data.read_netlist(dirpath)
     input_analyses = circuitgen.data.read_transiant_analyses(dirpath)
@@ -58,6 +61,32 @@ def train_features_to_value(features,values,data):
     #     predict = model.predict(np.reshape(test_features[i],(1,3)))
     #     print(test_values[i])
     #     print(predict)
+
+def regression_chain(features, data):
+    features = np.transpose(features)
+    train_features = features[:90]
+    test_features = features[91:]
+    values = np.transpose(data.values)
+    values_start = values[:,0]
+    values_middle = values[:,1]
+    values_end =  values[:,2]
+    train_values_start = values_start[:90]
+    test_values_start = values[91:]
+    model_start = circuitgen.models.regression_chain_start()
+    model_start.fit(train_features, train_values_start, epochs=100,batch_size=1)
+    features_middle = np.array([np.append(features[x],values[x][0]) for x in range(len(features))])
+    model_middle = circuitgen.models.regression_chain_middle()
+    model_middle.fit(features_middle, values_middle, epochs=100, batch_size=1)
+    features_end = np.array([np.append(features_middle[x],values[x][1]) for x in range(len(features_middle))])
+    model_end = circuitgen.models.regression_chain_end()
+    model_end.fit(features_end, values_end, epochs=100, batch_size=1)
+
+
+
+
+
+
+
 
 def cross_Validation(input, output):
     kfold = KFold(n_splits=10, shuffle=True)
