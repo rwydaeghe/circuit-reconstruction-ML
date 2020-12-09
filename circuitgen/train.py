@@ -3,7 +3,6 @@ from tensorflow.python.keras.backend import mean, square
 import circuitgen
 import numpy as np
 import torch
-from torch_geometric.data import Data
 from numpy import absolute
 from sklearn.datasets import make_regression
 from sklearn.tree import DecisionTreeRegressor
@@ -13,7 +12,7 @@ from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor, RegressorChain
 from sklearn.linear_model import LinearRegression
 
-def train(dirpath):
+def train(dirpath, model):
     input_netlist, output = circuitgen.data.read_netlist(dirpath)
     input_analyses = circuitgen.data.read_transiant_analyses(dirpath)
 
@@ -46,20 +45,23 @@ def train(dirpath):
     return
 
 
-def train_features_to_value(features,data):
-    features = np.transpose(features)
-    values = np.transpose(data.values)
-    #cross_Validation(features,values)
-    # print(train_values)
-    train_features = features[:80]
-    train_values = values[:80]
-    test_features = features[:80]
+def mlp(input_features,input_values):
+    circuit1 = input_features["circuit_1"]
+    features = [np.append(circuit1["zeros_re"][i],circuit1["poles_re"][i]).tolist() for i in range(len(circuit1["zeros_re"]))]
+    values_circuit1 = input_values["circuit_1"]
+    values = [np.append(values_circuit1["R1"][i],np.append(values_circuit1["L1"][i],values_circuit1["C1"][i])).tolist() for i in range(len(values_circuit1["R1"]))]
+    # #cross_Validation(features,values)
+    train_features = np.array(features[1:80])
+    train_values = np.array(values[1:80])
     train_values[:, 1] *= 1000
-    train_values[:, 2] *= 1000000
+    train_values[:, 2] *= 10000
 
-    test_values = values[81:]
+    print(train_values)
+    test_features = np.array(features[81:])
+    test_values = np.array(values[81:])
     model = circuitgen.models.features_to_values()
-    model.fit(train_features, train_values,epochs=300, batch_size=1)
+
+    model.fit(train_features, train_values,epochs=100, batch_size=1)
     model.summary()
     for i in range(len(test_features)):
         predict = model.predict(np.reshape(test_features[i],(1,3)))

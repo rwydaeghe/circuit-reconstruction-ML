@@ -17,26 +17,35 @@ def main():
     )
     parser.add_argument(
         "model",
-        choices=["TODO"],
+        choices=["regression"],
         help="model to use"
     )
     parser.add_argument(
-        "source",
-        help="source of input files to use"
+        "method",
+        choices=["mlp"],
+        help="model to use"
     )
-    parser.add_argument(
-        "dest",
-        help="dest of output netlist files"
-    )
+    # parser.add_argument(
+    #     "source",
+    #     help="source of input files to use"
+    # )
+    # parser.add_argument(
+    #     "dest",
+    #     help="dest of output netlist files"
+    # )
     # TODO add more args
     args = parser.parse_args()
-    filename = "{}-{}".format(args.source, args.model)
-    weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
+    # filename = "{}-{}".format(args.source, args.model)
+    # weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
     if args.operation == "train":
-        circuitgen.train.train(weights_filepath)
+        training_method = getattr(circuitgen.train, args.method)
+        # training_model = getattr(circuitgen.models, args.method)
+        input,output = circuitgen.data.get_regression_data()
+        training_method(input, output)
+    elif args.operation == "evaluate":
+        input, output = circuitgen.data.get_regression_data()
+        circuitgen.train.cross_Validation(input, output)
 
-    else:
-        generated_data = circuitgen.generate.generate(weights_filepath)
 
 
 if __name__ == "__main__":

@@ -25,16 +25,10 @@ def regression_model(size):
 
 def features_to_values():
     model = Sequential()
-    model.add(Dense(243, input_shape=(3,), activation='relu', kernel_constraint=NonNeg()))
-    model.add(Dropout(0.5))
-    model.add(Dense(81, activation='relu', kernel_constraint=NonNeg()))
-    model.add(Dropout(0.5))
-    model.add(Dense(27, activation='relu', kernel_constraint=NonNeg()))
-    model.add(Dropout(0.5))
-    model.add(Dense(9, activation='relu', kernel_constraint=NonNeg()))
-    model.add(Dropout(0.5))
-    model.add(Dense(3))
-    model.compile(loss=regression_loss_function, optimizer='adam',metrics=["accuracy"])
+    model.add(Dense(20, input_shape=(3,), activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dense(10, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dense(3, activation='linear', kernel_constraint=NonNeg()))
+    model.compile(loss='mae', optimizer='adam',metrics=["accuracy"])
     return model
 
 
