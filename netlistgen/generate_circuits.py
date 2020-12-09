@@ -39,7 +39,8 @@ class Read_and_write(object):
             #C does not work yet since these will often introduce 
             #floating nodes as there's no DC path to ground
                     
-    def read_network(self):
+    def read_network(self, return_values_dictionary=False):
+        values_dictionary={}
         with open(self.file_name, "r") as f:
             for n, line in enumerate(f):
                 if n>=self.read_and_write_from_line:
@@ -58,6 +59,18 @@ class Read_and_write(object):
                         if port2 not in self.nodes:
                             self.nodes.append(port2)
                         self.connect(port1, port2)
+                        if return_values_dictionary:
+                            if label[0]!='V' and label[0]!='I':
+                                value=items[3]
+                                if 'm' in value:
+                                    value=value.replace('m','e-3')
+                                if 'u' in value:
+                                    value=value.replace('u','e-6')
+                                if 'n' in value:
+                                    value=value.replace('n','e-9')
+                                values_dictionary[label]=float(value.rstrip())
+        if return_values_dictionary:
+            return values_dictionary
         
     def connect(self,port1, port2):
         try:
@@ -98,7 +111,7 @@ class Read_and_write(object):
             label = component_type + '1'
         #self.amount_of_components[component_type]+=1
     
-        line=' '.join([label, str(port1), str(port2), str(component_value), '\n'])
+        line=' '.join([label, str(port1), str(port2), str(component_value)])+'\n'
         self.write_to_line(line, self.read_and_write_from_line)
         
     def add_random_component(self):
@@ -114,11 +127,11 @@ class Read_and_write(object):
         except:
             print('Some exception occured trying to compute transients of file named '+self.file_name+'!')
             self.is_singular=True
-        self.transient_data=self.net.x #TO DO: wrong, needs to be get_voltage
+        self.transient_data=self.net.get_voltage('R1') #maybe to do: voltage/currents on all nodes/branches since one of them might be nan while this one isn't?
         
         # Catch singular matrices or other errors:
         if self.transient_data is not None:
-            if np.nan in self.transient_data[:,0]: 
+            if np.any(np.isnan(self.transient_data)): 
                 print('Your matrix was probably singular as the results contain nan...')
                 self.is_singular=True
         
@@ -147,7 +160,7 @@ class Read_and_write(object):
         else:
             plot_command='.plot ' + ' '.join(content_list) + '\n'
             self.write_to_line(plot_command, self.read_and_write_from_line+1)
-            self.delete_last_line()
+            self.delete_lines(-1)
             self.compute_transients() #I could probably not do this and use plot command and self.transient_data
             # TO DO: figure out how to give current figure title
             try:
@@ -160,9 +173,9 @@ class Read_and_write(object):
             plt.show()
             plt.pause(.1)
                 
-    def delete_last_line(self):
+    def delete_lines(self, int_or_slice):
         lines = open(self.file_name, 'r').readlines()
-        lines=lines[:-1]
+        del lines[int_or_slice]
         open(self.file_name, 'w').write(''.join(lines))
                 
     def write_to_line(self, line, line_number):
@@ -194,9 +207,10 @@ class Read_and_write(object):
             new_lines.append(new_line)
         open(self.file_name,'w').write(''.join(new_lines))
         
-class Generate_data():
-    def __init__(self, basic_file, target_dir, seed=None):
+class Data_set():
+    def __init__(self, basic_file, target_dir, path_to_basic_file='', seed=None):
         self.basic_file=basic_file
+        self.path_to_basic_file=path_to_basic_file
         self.target_dir=target_dir
         if target_dir[-1] != '/':
             self.target_dir+='/'
@@ -204,17 +218,25 @@ class Generate_data():
         self.seed=seed
         random.seed(self.seed) #a None seed is actually no seed
         
-    def read_dir(self):
+    def read_dir(self, return_values_dictionary=False):
         import glob
+        if return_values_dictionary:
+            #for charizard I don't recommend using this option. good luck ordering the keys in a nice way
+            dict_of_dict={}
         for file in glob.glob(self.target_dir+'*.net'):
             if self.basic_file[:-len('.net')] in file:
                 id_number=int(file.split(self.basic_file[:-len('.net')]+'_')[1].split('.net')[0])
                 rw_obj=Read_and_write(file,id_number)
                 self.read_and_write_objects.append(rw_obj)
-                rw_obj.read_network()
+                if return_values_dictionary:
+                    dict_of_dict[file[len(self.target_dir):-len('.net')]]=rw_obj.read_network(return_values_dictionary=True)
+                else:
+                    rw_obj.read_network()
+        if return_values_dictionary:
+            return dict_of_dict
                 
     def clone_file(self, amount):
-        copied_contents=open(self.basic_file,'r').readlines()
+        copied_contents=open(self.path_to_basic_file+self.basic_file,'r').readlines()
         for i in range(1,amount+1):
             name=self.target_dir+self.basic_file[:-len('.net')]+'_'+str(i)+'.net'
             self.read_and_write_objects.append(Read_and_write(name,i))
@@ -232,28 +254,48 @@ class Generate_data():
             if self.basic_file[:-len('.net')]+'_' in file:
                 os.remove(file)
           
-    def varied_values_data_set(self, size, write_to_pkl=True):
-        self.clone_file(size)
+    def varied_values_data_set(self, data_set_size, compute_transients=True, write_to_pkl=True):
+        self.clone_file(data_set_size)
         for rw_obj in tqdm(self.read_and_write_objects):
             rw_obj.write_new_values()
-            rw_obj.compute_transients()
-            transient_data_name=self.target_dir+self.basic_file[:-len('.net')]+'_trans_data_'+str(rw_obj.number_in_dataset)+'.pkl'
-            if write_to_pkl:
-                with open(transient_data_name,'wb') as f:
-                    pickle.dump(rw_obj.transient_data,f)
-                #to do: dump the time axis on here. Is it the same always?
+            if compute_transients:
+                rw_obj.compute_transients()
+                if write_to_pkl:
+                    transient_data_name=self.target_dir+self.basic_file[:-len('.net')]+'_trans_data_'+str(rw_obj.number_in_dataset)+'.pkl'
+                    with open(transient_data_name,'wb') as f:
+                        pickle.dump(rw_obj.transient_data,f)
+                    #to do: dump the time axis on here. Is it the same always?
         
-    def varied_topology_data_set(self, size, allow_C):
-        self.clone_file(size)
+    def varied_topology_data_set(self, data_set_size, network_size, allow_C, only_valid_circuits=True, compute_transients=True, write_to_pkl=True):
+        self.clone_file(data_set_size)        
         for rw_obj in tqdm(self.read_and_write_objects):
-            rw_obj.allow_C=allow_C
-            rw_obj.write_more_network(int(random.random()*5))
-            rw_obj.compute_transients()
-            transient_data_name=self.target_dir+self.basic_file[:-len('.net')]+'_trans_data_'+str(rw_obj.number_in_dataset)+'.pkl'
-            if write_to_pkl:
-                with open(transient_data_name,'wb') as f:
-                    pickle.dump(rw_obj.transient_data,f)
-                #to do: dump the time axis on here. Is it the same always?
+            succes=False
+            while not succes:
+                rw_obj.allow_C=allow_C
+                rw_obj.read_network()
+                amount_of_components_to_add=network_size-sum(rw_obj.amount_of_components.values())
+                if amount_of_components_to_add<1:
+                    print('Network size too small!')
+                    print('Requested size: '+str(network_size))
+                    print('Current size: '+str(sum(rw_obj.amount_of_components.values())))
+                rw_obj.write_more_network(amount_of_components_to_add)
+                if only_valid_circuits==True and compute_transients==False:
+                    print('only_valid_circuits is True and compute_transients is False, this is not possible')
+                    return
+                if compute_transients:
+                    rw_obj.compute_transients()
+                    if only_valid_circuits and rw_obj.is_singular:
+                        rw_obj.delete_lines(slice(-2-amount_of_components_to_add,-2))
+                        rw_obj.__init__(rw_obj.file_name, rw_obj.number_in_dataset)
+                        succes=False
+                        print('Retrying to generate a valid network')
+                        continue
+                    if write_to_pkl:
+                        transient_data_name=self.target_dir+self.basic_file[:-len('.net')]+'_trans_data_'+str(rw_obj.number_in_dataset)+'.pkl'
+                        with open(transient_data_name,'wb') as f:
+                            pickle.dump(rw_obj.transient_data,f)
+                        #to do: dump the time axis on here. Is it the same always?
+                succes=True
                 
     def plot(self, data_files_ids, **kwargs):
         if data_files_ids=='all':
@@ -266,7 +308,7 @@ class Generate_data():
                     rw_obj.plot(**kwargs)
                     break
                 
-    def collect_all_transients(self, v_or_i, arg):
+    def get_all_transients(self, v_or_i, arg):
         # this method assumes all data has same t vector, 
         # and the transients have already been computed,
         # and that arg is the same for all networks
@@ -274,48 +316,21 @@ class Generate_data():
         t=self.read_and_write_objects[0].net.t[1:]
         dt=t[1]-t[0]
         t-=dt/2
-        data=np.zeros((len(t),len(self.read_and_write_objects)))
+        data=np.zeros((len(t),len(self.read_and_write_objects)+1))
+        data[:,0]=t
         for i,rw_obj in enumerate(self.read_and_write_objects):
             if v_or_i=='v':
                 foo=rw_obj.net.get_voltage(arg)
-                data[:,i]=foo[1:]
+                data[:,i+1]=foo[1:]
             elif v_or_i=='i':
                 foo=rw_obj.net.get_current(arg)
-                data[:,i]=foo[1:]
-                
-        return data, t
+                data[:,i+1]=foo[1:]
+        return data
+    
+    def get_all_values(self):
+        component_names=self.read_and_write_objects[0].read_network(return_values_dictionary=True).keys()
+        data=np.zeros((len(component_names),len(self.read_and_write_objects)+1))
+        for rw_obj in self.read_and_write_objects:
+            data[:,i]=rw_obj.read_network(return_values_dictionary=True).values()
+    
         
-   
-plt.close('all')
-
-# CREATE
-
-#you still have to create the target directory
-
-#"""
-data_set_1=Generate_data('RLC.net', target_dir='data/varied_values_data/', seed=1)
-#data_set_1.delete_files() #be careful
-data_set_1.varied_values_data_set(size=100)
-#"""
-
-"""
-data_set_2=Generate_data('RLC.net', target_dir='data/varied_topology_data/', seed=2)
-data_set_2.delete_files() #be careful
-data_set_2.varied_topology_data_set(size=10, allow_C=False)
-"""
-
-# READ
-
-#"""
-#data_set_2=Generate_data('RLC.net', target_dir='data/varied_topology_data/', seed=2)
-#data_set_1=Generate_data('RLC.net', target_dir='data/varied_values_data/', seed=1)
-#data_set_2.read_dir()
-#data_set_2.plot('all',content_list='all_I')
-#"""
-
-data_set_1.plot([1,2,3])
-data, t = data_set_1.collect_all_transients('i','R1')
-import scipy.io
-scipy.io.savemat('varied_values_data_set.mat', {"data": data,"t": t})
-
-

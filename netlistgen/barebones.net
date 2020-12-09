@@ -1,0 +1,5 @@
+* Example of transient analysis
+V1 0 1 dirac(1u)
+R1 1 0 10000m
+.tran 1u 10m
+.plot i(R1) 
