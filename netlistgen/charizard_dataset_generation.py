@@ -51,7 +51,7 @@ if generate_transients_and_values:
                                           write_to_pkl=False)
         last_added_node=max(charizard_dataset.read_and_write_objects[i].nodes)
         measured_node=last_added_node
-        #transient_data[circuit_file_name[:-len('.net')]]=current_ds.get_all_transients('v','(1,'+str(measured_node)+')')
+        transient_data[circuit_file_name[:-len('.net')]]=current_ds.get_all_transients('v','(1,'+str(measured_node)+')')
         
         # add values already to the values dictionary (for supervised learning)
         list_of_dict=[]
