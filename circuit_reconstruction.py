@@ -17,26 +17,30 @@ def main():
     )
     parser.add_argument(
         "model",
-        choices=["TODO"],
+        choices=["mlp"],
         help="model to use"
     )
-    parser.add_argument(
-        "source",
-        help="source of input files to use"
-    )
-    parser.add_argument(
-        "dest",
-        help="dest of output netlist files"
-    )
-    # TODO add more args
-    args = parser.parse_args()
-    filename = "{}-{}".format(args.source, args.model)
-    weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
-    if args.operation == "train":
-        circuitgen.train.train(weights_filepath)
 
-    else:
-        generated_data = circuitgen.generate.generate(weights_filepath)
+    # parser.add_argument(
+    #     "source",
+    #     help="source of input files to use"
+    # )
+    # parser.add_argument(
+    #     "dest",
+    #     help="dest of output netlist files"
+    # )
+    args = parser.parse_args()
+    # filename = "{}-{}".format(args.source, args.model)
+    # weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
+    if args.operation == "train":
+        training_method = getattr(circuitgen.train, args.model)
+        training_model = getattr(circuitgen.models, args.model)
+        input,output = circuitgen.data.get_regression_data()
+        training_method(input, output, training_model)
+    elif args.operation == "evaluate":
+        input, output = circuitgen.data.get_regression_data()
+        training_model = getattr(circuitgen.models, args.model)
+        circuitgen.train.cross_Validation(input, output, training_model)
 
 
 if __name__ == "__main__":
