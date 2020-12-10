@@ -23,7 +23,7 @@ def regression_model(size):
 
     return model
 
-def features_to_values():
+def mlp():
     model = Sequential()
     model.add(Dense(20, input_shape=(3,), activation='relu', kernel_constraint=NonNeg()))
     model.add(Dense(10, activation='relu', kernel_constraint=NonNeg()))
