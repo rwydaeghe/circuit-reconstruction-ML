@@ -33,7 +33,6 @@ def main():
     #     "dest",
     #     help="dest of output netlist files"
     # )
-    # TODO add more args
     args = parser.parse_args()
     # filename = "{}-{}".format(args.source, args.model)
     # weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
@@ -45,7 +44,6 @@ def main():
     elif args.operation == "evaluate":
         input, output = circuitgen.data.get_regression_data()
         circuitgen.train.cross_Validation(input, output)
-
 
 
 if __name__ == "__main__":

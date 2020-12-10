@@ -94,6 +94,16 @@ def cross_Validation(input, output):
     fold_no = 1
     acc_per_fold = []
     loss_per_fold = []
+    circuit1 = input["circuit_1"]
+    features = [np.append(circuit1["zeros_re"][i], circuit1["poles_re"][i]).tolist() for i in
+                range(len(circuit1["zeros_re"]))]
+    values_circuit1 = output["circuit_1"]
+    values = [
+        np.append(values_circuit1["R1"][i], np.append(values_circuit1["L1"][i], values_circuit1["C1"][i])).tolist() for
+        i in range(len(values_circuit1["R1"]))]
+    # #cross_Validation(features,values)
+    input = np.array(features[1:])
+    output = np.array(values[1:])
     output[:, 1] *= 1000
     output[:, 2] *= 1000000
     for train, test in kfold.split(input, output):
