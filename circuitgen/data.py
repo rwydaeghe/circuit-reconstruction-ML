@@ -3,7 +3,15 @@ import glob
 import spicepy.netlist as ntl
 from spicepy.netsolve import net_solve
 import numpy as np
+import pickle
 
+def get_regression_data():
+
+    f_features = open("data/input/regression_data/charizard_features.pkl", "rb")
+    f_values = open("data/input/regression_data/charizard_values.pkl", "rb")
+    features = pickle.load(f_features)
+    values = pickle.load(f_values)
+    return features, values
 
 def read_netlist(dirpath):
     comp_to_id = {"R":1, "L": 2, "C": 3 , "V": 4}
