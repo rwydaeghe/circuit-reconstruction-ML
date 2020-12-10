@@ -45,7 +45,7 @@ def train(dirpath, model):
     return
 
 
-def mlp(input_features,input_values):
+def mlp(input_features,input_values, training_model):
     circuit1 = input_features["circuit_1"]
     features = [np.append(circuit1["zeros_re"][i],circuit1["poles_re"][i]).tolist() for i in range(len(circuit1["zeros_re"]))]
     values_circuit1 = input_values["circuit_1"]
@@ -59,8 +59,7 @@ def mlp(input_features,input_values):
     print(train_values)
     test_features = np.array(features[81:])
     test_values = np.array(values[81:])
-    model = circuitgen.models.features_to_values()
-
+    model = training_model()
     model.fit(train_features, train_values,epochs=100, batch_size=1)
     model.summary()
     for i in range(len(test_features)):
@@ -89,7 +88,7 @@ def regression_chain(features, data):
     model_end.fit(features_end, values_end, epochs=100, batch_size=1)
 
 
-def cross_Validation(input, output):
+def cross_Validation(input, output,training_model):
     kfold = KFold(n_splits=10, shuffle=True)
     fold_no = 1
     acc_per_fold = []
@@ -108,7 +107,7 @@ def cross_Validation(input, output):
     output[:, 2] *= 1000000
     for train, test in kfold.split(input, output):
 
-        model = circuitgen.models.features_to_values()
+        model = training_model()
         print('------------------------------------------------------------------------')
         print(f'Training for fold {fold_no} ...')
         history = model.fit(input[train], output[train],batch_size=1, epochs=300, verbose=1)

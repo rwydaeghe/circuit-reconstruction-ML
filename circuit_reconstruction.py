@@ -17,14 +17,10 @@ def main():
     )
     parser.add_argument(
         "model",
-        choices=["regression"],
-        help="model to use"
-    )
-    parser.add_argument(
-        "method",
         choices=["mlp"],
         help="model to use"
     )
+
     # parser.add_argument(
     #     "source",
     #     help="source of input files to use"
@@ -37,13 +33,14 @@ def main():
     # filename = "{}-{}".format(args.source, args.model)
     # weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
     if args.operation == "train":
-        training_method = getattr(circuitgen.train, args.method)
-        # training_model = getattr(circuitgen.models, args.method)
+        training_method = getattr(circuitgen.train, args.model)
+        training_model = getattr(circuitgen.models, args.model)
         input,output = circuitgen.data.get_regression_data()
-        training_method(input, output)
+        training_method(input, output, training_model)
     elif args.operation == "evaluate":
         input, output = circuitgen.data.get_regression_data()
-        circuitgen.train.cross_Validation(input, output)
+        training_model = getattr(circuitgen.models, args.model)
+        circuitgen.train.cross_Validation(input, output, training_model)
 
 
 if __name__ == "__main__":
