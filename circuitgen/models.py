@@ -25,9 +25,9 @@ def regression_model(size):
 
 def mlp():
     model = Sequential()
-    model.add(Dense(20, input_shape=(3,), activation='relu', kernel_constraint=NonNeg()))
-    model.add(Dense(10, activation='relu', kernel_constraint=NonNeg()))
-    model.add(Dense(3, activation='linear', kernel_constraint=NonNeg()))
+    model.add(Dense(20, input_shape=( None,5), activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(7, activation='linear', kernel_constraint=NonNeg()))
     model.compile(loss='mae', optimizer='adam',metrics=["accuracy"])
     return model
 
