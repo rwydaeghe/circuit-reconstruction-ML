@@ -1,9 +1,12 @@
 from keras.models import Sequential
-
 from keras.layers import Input, concatenate, Dense, Dropout
 from keras.models import Model
 from keras.constraints import NonNeg
-from tensorflow.python.keras.backend import mean, square
+from tensorflow.keras.backend import mean, square
+from tensorflow.keras.optimizers import Adam,Adadelta
+from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Lasso
+from sklearn.svm import SVR
 
 def regression_model(size):
 
@@ -25,11 +28,32 @@ def regression_model(size):
 
 def mlp():
     model = Sequential()
-    model.add(Dense(20, input_shape=( None,5), activation='relu'))
-    model.add(Dense(10, activation='relu'))
+    model.add(Dense(5, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(10, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+
+    model.add(Dense(20, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
+    model.add(Dense(10, activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dropout(0.5))
     model.add(Dense(7, activation='linear', kernel_constraint=NonNeg()))
-    model.compile(loss='mae', optimizer='adam',metrics=["accuracy"])
+
+    opt = Adadelta(lr=0.001)
+    model.compile(loss='mae', optimizer=opt,metrics=["accuracy"])
     return model
+
+
+def linear():
+    return LinearRegression()
+
+
+def lasso():
+    return Lasso(alpha=0.0001, precompute=True, max_iter=1000,positive=True, random_state=9999, selection='random')
+
+def svr():
+    return  SVR(kernel='poly', C=1e3, degree=2)
 
 
 def regression_chain_start():
@@ -50,7 +74,7 @@ def regression_chain_start():
 
 def regression_chain_middle():
     model = Sequential()
-    model.add(Dense(20, input_shape=(4,),activation='relu', kernel_constraint=NonNeg()))
+    model.add(Dense(20,activation='relu', kernel_constraint=NonNeg()))
     model.add(Dropout(0.5))
 
     model.add(Dense(10, activation='relu', kernel_constraint=NonNeg()))
