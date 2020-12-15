@@ -91,6 +91,26 @@ Every time there's a NaN value, that means that amount and/or the 'structure' of
 """
 
 if process_features_mat_file:
+    def split_to_real_and_imag(zp_list):
+        real_list=[]
+        imag_list=[]
+        if zp_list.size==0:
+            return real_list, imag_list
+        skip_next_one=False
+        for i,v in enumerate(zp_list):
+            v=v[0]
+            if skip_next_one:
+                skip_next_one=False
+                continue
+            if np.imag(v)==0: #it doesn't come as double
+                real_list.append(np.real(v))
+                imag_list.append(0)
+            else: #it comes as double
+                real_list.append(np.real(v))
+                imag_list.append(np.abs(np.imag(v)))
+                skip_next_one=True
+        return np.array(real_list), np.array(imag_list)
+                
     features={}
     #start by converting the matlab struct of struct's file to a python dict of dict 
     D=scipy.io.loadmat('data/bulbasaur_data/bulbasaur_features.mat')
@@ -119,19 +139,25 @@ if process_features_mat_file:
                 else:
                     np_plot=np_plot[0,-1]
                 print(circuit_i+1, nq_plot, np_plot, poles.size, err_plot, max(poles))
-        if nq_plot=='-' and np_plot=='-':
-            node_feat['zeros']='no signal'
-            node_feat['poles']='no signal'
-            node_feat['error_evolution']='no signal'
-            node_feat['nq_evolution']='no signal'
-            node_feat['np_evolution']='no signal'
-        else:
-            node_feat['zeros']=zeros
-            node_feat['poles']=poles
-            node_feat['error_evolution']=err_plot
-            node_feat['nq_evolution']=nq_plot
-            node_feat['np_evolution']=np_plot
-            circuit_nodes['node_'+str(node_i+2)]=node_feat     
+            if nq_plot=='-' and np_plot=='-':
+                node_feat['zeros_re']='no signal'
+                node_feat['zeros_im']='no signal'
+                node_feat['poles_re']='no signal'
+                node_feat['poles_im']='no signal'
+                node_feat['error_evolution']='no signal'
+                node_feat['nq_evolution']='no signal'
+                node_feat['np_evolution']='no signal'
+            else:
+                z_re, z_im = split_to_real_and_imag(zeros)
+                p_re, p_im = split_to_real_and_imag(poles)
+                node_feat['zeros_re']=z_re
+                node_feat['zeros_im']=z_im
+                node_feat['poles_re']=p_re
+                node_feat['poles_im']=p_im
+                node_feat['error_evolution']=err_plot
+                node_feat['nq_evolution']=nq_plot
+                node_feat['np_evolution']=np_plot
+                circuit_nodes['node_'+str(node_i+2)]=node_feat     
         features['circuit_'+str(circuit_i+1)]=circuit_nodes #matlab indexing!
     with open('data/bulbasaur_data/bulbasaur_features.pkl','wb') as f:
         pickle.dump(features,f)
