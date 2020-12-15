@@ -1,6 +1,6 @@
 import keras
 from tensorflow.python.keras.backend import mean, square
-
+from sklearn.svm import SVR
 import circuitgen
 import numpy as np
 import torch
@@ -13,6 +13,7 @@ from sklearn.model_selection import RepeatedKFold
 from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor, RegressorChain
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Lasso
 
 
 def train(dirpath, model):
@@ -79,13 +80,12 @@ def mlp(input_features, input_values, training_model):
     train_values = np.array(filtered_values[:400])
     test_features = np.array(filtered_features[401:])
     test_values = np.array(filtered_values[401:])
+    
     padded_train_features = keras.preprocessing.sequence.pad_sequences(train_features, maxlen=5)
     padded_test_features = keras.preprocessing.sequence.pad_sequences(test_features, maxlen=5)
-    print(len(padded_train_features))
-    print(padded_train_features)
-    print(train_values)
+
     model = training_model()
-    model.fit(padded_train_features, train_values,epochs=1000, batch_size=1)
+    model.fit(padded_train_features, train_values,epochs=300, batch_size=1)
     model.summary()
     for i in range(len(test_features)):
         predict = model.predict(np.reshape(padded_test_features[i],(1,5)))
