@@ -36,4 +36,5 @@ def get_gnn_data():
     features = pickle.load(f_features)
     topology = pickle.load(f_topology)
     graphs = circuitgen.gnn.convert_to_graph_data(features,topology)
+    return graphs
 
