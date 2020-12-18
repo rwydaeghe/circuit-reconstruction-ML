@@ -44,7 +44,7 @@ dtn=netn.t[2]-netn.t[1]
 new_tn-=dtn/2
 mse_n=mse(simulated_In[1:],analytic_I(new_tn))
 
-plt.loglog(np.array([0.1,1,10]),np.array([mse_n,mse_u,mse_m]))
+plt.loglog(np.array([0.1,1,10]),np.sqrt(np.array([mse_n,mse_u,mse_m])))
 plt.xlabel('dt')
 plt.ylabel('mse')
 # it is 2nd order accurate (see pdf for why)

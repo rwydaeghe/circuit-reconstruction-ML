@@ -144,10 +144,10 @@ class Read_and_write(object):
         self.is_singular=False
         try:
             net_solve(self.net)
+            self.transient_data=self.net.get_voltage('R1') #maybe to do: voltage/currents on all nodes/branches since one of them might be nan while this one isn't?
         except:
             print('Some exception occured trying to compute transients of file named '+self.file_name+'!')
-            self.is_singular=True
-        self.transient_data=self.net.get_voltage('R1') #maybe to do: voltage/currents on all nodes/branches since one of them might be nan while this one isn't?
+            self.is_singular=True        
         
         # Catch singular matrices or other errors:
         if self.transient_data is not None:
@@ -193,6 +193,24 @@ class Read_and_write(object):
                 plt.title('The matrix is singular which is why you do not see anything')
             plt.show()
             plt.pause(.1)
+            
+    def plot_paper_ready(self):
+        plt.figure()
+        self.compute_transients()
+        plt.xlabel('Time [$s$]', fontsize=16)
+        plt.ylabel('Voltage [$V$]', fontsize=16)
+        plt.xlim([self.net.t[1]-self.net.t[0],self.net.t[-1]])
+        #plt.grid()
+        content_list=[]
+        for component_type in self.amount_of_components.keys():
+            for number in range(1,self.amount_of_components[component_type]+1):
+                signal=self.net.get_voltage(component_type+str(number))[1:]
+                plt.plot(self.net.t[1:], signal,
+                         label='v('+component_type+str(number)+')')
+                #plt.ylim([min(signal)*1.5, max(signal)*1.5])
+        plt.ticklabel_format(style='sci', scilimits=(-2,2))
+        plt.legend(fontsize=16)
+        plt.tight_layout()
                 
     def delete_lines(self, int_or_slice):
         lines = open(self.file_name, 'r').readlines()
@@ -338,6 +356,18 @@ class Data_set():
             for rw_obj in self.read_and_write_objects:
                 if rw_obj.number_in_dataset == id_number:
                     rw_obj.plot(**kwargs)
+                    break
+                
+    def plot_paper_ready(self, data_files_ids):
+        #limited functionality but better formatting
+        if data_files_ids=='all':
+            data_files_ids=[]
+            for rw_obj in self.read_and_write_objects:
+                data_files_ids.append(rw_obj.number_in_dataset)
+        for id_number in data_files_ids:
+            for rw_obj in self.read_and_write_objects:
+                if rw_obj.number_in_dataset == id_number:
+                    rw_obj.plot_paper_ready()
                     break
                 
     def get_all_transients(self, v_or_i, arg):

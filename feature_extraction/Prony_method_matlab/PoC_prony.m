@@ -75,32 +75,32 @@ poles
 predicted_gain
 predicted_zeros
 predicted_poles
-relrse_in_gain=abs(predicted_gain-gain)/abs(gain);
+nrse_in_gain=abs(predicted_gain-gain)/abs(gain);
 if length(predicted_zeros)~=length(zeros)
     disp('The number of zeros predicted is wrong')
     min_len=min(length(zeros),length(predicted_zeros));
-    relrmse_in_zeros=sqrt(mean(abs(set_imag_part_pos(predicted_zeros(1:min_len))-set_imag_part_pos(zeros(1:min_len))).^2))/mean(abs(set_imag_part_pos(zeros(1:min_len))));
+    nrmse_in_zeros=sqrt(mean(abs(set_imag_part_pos(predicted_zeros(1:min_len))-set_imag_part_pos(zeros(1:min_len))).^2))/my_range(abs(set_imag_part_pos(zeros(1:min_len))));
 else
-    relrmse_in_zeros=sqrt(mean(abs(set_imag_part_pos(predicted_zeros)-set_imag_part_pos(zeros)).^2))/mean(abs(set_imag_part_pos(zeros)));
+    nrmse_in_zeros=sqrt(mean(abs(set_imag_part_pos(predicted_zeros)-set_imag_part_pos(zeros)).^2))/my_range(abs(set_imag_part_pos(zeros)));
 end
 if length(predicted_poles)~=length(poles)
     disp('The number of poles predicted is wrong')
     min_len=min(length(poles),length(predicted_poles));
-    relrmse_in_poles=sqrt(mean(abs(set_imag_part_pos(predicted_poles(1:min_len))-set_imag_part_pos(poles(1:min_len))).^2))/mean(abs(set_imag_part_pos(poles(1:min_len))));
+    nrmse_in_poles=sqrt(mean(abs(set_imag_part_pos(predicted_poles(1:min_len))-set_imag_part_pos(poles(1:min_len))).^2))/my_range(abs(set_imag_part_pos(poles(1:min_len))));
 else
-    relrmse_in_poles=sqrt(mean(abs(set_imag_part_pos(predicted_poles)-set_imag_part_pos(poles)).^2))/mean(abs(set_imag_part_pos(poles)));
+    nrmse_in_poles=sqrt(mean(abs(set_imag_part_pos(predicted_poles)-set_imag_part_pos(poles)).^2))/my_range(abs(set_imag_part_pos(poles)));
 end
-relrse_in_gain
-relrmse_in_zeros
-relrmse_in_poles
+nrse_in_gain
+nrmse_in_zeros
+nrmse_in_poles
 percent_wrong_deemed_acceptabe=10;
-if relrmse_in_zeros>percent_wrong_deemed_acceptabe/100
+if nrmse_in_zeros>percent_wrong_deemed_acceptabe/100
     disp('I probably got the values of zeros wrong')
 end
-if relrmse_in_poles>percent_wrong_deemed_acceptabe/100
+if nrmse_in_poles>percent_wrong_deemed_acceptabe/100
     disp('I probably got the values of poles wrong')
 end
-if relrse_in_gain>percent_wrong_deemed_acceptabe/100
+if nrse_in_gain>percent_wrong_deemed_acceptabe/100
     disp('I probably got the value of gain wrong')
 end
 close(wb)
@@ -112,6 +112,14 @@ for i=1:length(in)
         in(i)=real(in(i))-1i*imag(in(i));
     end
     out(end+1)=in(i);
+end
+end
+
+function out=my_range(x)
+if size(x)==1
+    out=x;
+else
+    out=max(x)-min(x);
 end
 end
 

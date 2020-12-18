@@ -1694,7 +1694,7 @@ class Network:
                     filename='transient_plot.png'
 
                 hf.savefig(filename, dpi=dpi_value)
-
+        
         return hf
 
     def bode(self, decibel=False, to_file=False, filename=None, dpi_value=150):

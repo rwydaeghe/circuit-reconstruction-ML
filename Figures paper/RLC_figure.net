@@ -4,4 +4,4 @@ R1 1 2 10
 L1 2 3 1m
 C1 3 0 1u
 .tran 1u 10m
-.plot i(R1)
+.plot v(R1) v(L1) v(C1)

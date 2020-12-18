@@ -37,7 +37,8 @@ if generate_transients_and_values:
     charizard_dataset.varied_topology_data_set(data_set_size=5,
                                                network_size=8,
                                                allow_C=True, 
-                                               write_to_pkl=False)
+                                               write_to_pkl=False,
+                                               verbose=True)
     transient_data={}
     for i,rw_obj in enumerate(charizard_dataset.read_and_write_objects):
         circuit_file_name='RLC_'+str(i+1)+'.net'

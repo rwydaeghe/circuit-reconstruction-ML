@@ -26,9 +26,10 @@ import pickle
 plt.close('all')
 
 general_seed='bulbasaur'
+analyse_bias=True
 generate_transients_and_values=False
-process_features_mat_file=True
-analyse_data=True
+process_features_mat_file=False
+analyse_data=False
 if analyse_data:
     if process_features_mat_file==False:
         print('You need to process the data to analyse it')
@@ -40,6 +41,22 @@ if analyse_data:
 # net = ntl.Network('RLC.net')
 # net_solve(net)
 # net.plot()
+
+if analyse_bias:
+    bulbasaur_dataset=Data_set('RLC.net', 
+                                    target_dir='data/bulbasaur_data',
+                                    seed=general_seed)
+    bulbasaur_dataset.read_dir()
+    amount_R=0
+    amount_L=0
+    amount_C=0    
+    for rw_obj in bulbasaur_dataset.read_and_write_objects:
+        amount_R+=rw_obj.amount_of_components['R']
+        amount_L+=rw_obj.amount_of_components['L']
+        amount_C+=rw_obj.amount_of_components['C']
+    tot=amount_R+amount_L+amount_C
+    print(amount_R,amount_L,amount_C)
+    print(amount_R/tot*100,amount_L/tot*100,amount_C/tot*100)
 
 if generate_transients_and_values:
     values={}    
