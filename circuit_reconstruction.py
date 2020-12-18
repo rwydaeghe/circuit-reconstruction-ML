@@ -22,7 +22,7 @@ def main():
     )
     parser.add_argument(
         "model",
-        choices=["mlp", "linear", "lasso"],
+        choices=["mlp", "linear", "lasso", "no_edges", "no_nodes"],
         help="model to use",
         default = "mlp"
     )
@@ -31,7 +31,9 @@ def main():
     if args.operation == "train":
 
         if args.method == "gnn":
-            input_graphs, target_graphs = circuitgen.data.get_gnn_data()
+            if args.model != "no_edges" and args.model != "no_nodes":
+                print("model should be no_edges or no_model")
+            input_graphs, target_graphs = circuitgen.data.get_gnn_data(args.model)
             circuitgen.gnn.train_gnn(input_graphs, target_graphs)
         else:
             training_method = getattr(circuitgen.train, args.method)

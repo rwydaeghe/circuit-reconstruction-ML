@@ -30,12 +30,16 @@ def read_netlist(dirpath):
                 output.append(values[-1])
     return input, output
 
-def get_gnn_data():
+def get_gnn_data(type):
     f_features = open("data/input/bulbasaur_data/bulbasaur_features.pkl", "rb")
     f_topology = open("data/input/bulbasaur_data/bulbasaur_topology.pkl", "rb")
     features = pickle.load(f_features)
     topology = pickle.load(f_topology)
-    input_graphs = circuitgen.gnn.create_no_nodefeatures_graphs(features,topology)
+    if type == "no_edges":
+        input_graphs = circuitgen.gnn.create_no_edgefeatures_graphs(features,topology)
+    else:
+        input_graphs = circuitgen.gnn.create_no_nodefeatures_graphs(features,topology)
+
     target_graphs = circuitgen.gnn.convert_to_graph_data(features,topology)
     return input_graphs,target_graphs
 

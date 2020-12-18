@@ -61,7 +61,7 @@ def create_no_edgefeatures_graphs(features, topology):
             for i in range(len(receiver)):
                 senders.append(float(sender))
                 receivers.append(float(receiver[i][1]))
-        edges.append([0.0,0.0])
+                edges.append([0.0,0.0])
         maximum = 0
         for i in range(len(circuit_topology.keys())):
             if 'node_{}'.format(i) not in circuit_features:
