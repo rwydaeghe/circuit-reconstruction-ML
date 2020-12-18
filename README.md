@@ -3,13 +3,13 @@
 
 
 
-Training network: python circuit_reconstruction.py [operation] [model/method].
+Training network: python circuit_reconstruction.py [operation] [method] [model].
 
 For example: 
 ```bash
-python circuit_reconstruction.py train mlp
+python circuit_reconstruction.py train regression mlp
 ```
- trains with the MLP model.
+ trains a regression method with the MLP model.
 
 
 
@@ -18,7 +18,18 @@ Operations:
 * train
 * evaluate
 
-methods/models
-* MLP
+methods
+* Regression
+* GNN
 
-More methods and operations added later.
+models
+
+---regression---
+* MLP
+* Linear
+* Lasso
+
+---GNN---
+* no_edges
+* no_models
+
