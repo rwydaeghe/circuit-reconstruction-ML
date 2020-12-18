@@ -12,35 +12,45 @@ def main():
     parser = argparse.ArgumentParser(description="Use deep neural networks to reconstruct circuits")
     parser.add_argument(
         "operation",
-        choices=["train", "evaluate", "generate"],
+        choices=["train", "evaluate"],
         help="operation to perform"
     )
     parser.add_argument(
+        "method",
+        choices=["regression", "gnn"],
+        help="method to use"
+    )
+    parser.add_argument(
         "model",
-        choices=["mlp"],
-        help="model to use"
+        choices=["mlp", "linear", "lasso", "no_edges", "no_nodes"],
+        help="model to use",
+        default = "mlp"
     )
 
-    # parser.add_argument(
-    #     "source",
-    #     help="source of input files to use"
-    # )
-    # parser.add_argument(
-    #     "dest",
-    #     help="dest of output netlist files"
-    # )
     args = parser.parse_args()
-    # filename = "{}-{}".format(args.source, args.model)
-    # weights_filepath = os.path.join("weights", "{}.hdf5".format(filename))
     if args.operation == "train":
-        training_method = getattr(circuitgen.train, args.model)
-        training_model = getattr(circuitgen.models, args.model)
-        input, output = circuitgen.data.get_regression_data()
-        training_method(input, output, training_model)
+
+        if args.method == "gnn":
+            if args.model != "no_edges" and args.model != "no_nodes":
+                print("model should be no_edges or no_model")
+            input_graphs, target_graphs = circuitgen.data.get_gnn_data(args.model)
+            circuitgen.gnn.train_gnn(input_graphs, target_graphs)
+        else:
+            training_method = getattr(circuitgen.train, args.method)
+            training_model = getattr(circuitgen.models, args.model)
+            input, output = circuitgen.data.get_regression_data()
+            training_method(input, output, training_model,False)
+
     elif args.operation == "evaluate":
-        input, output = circuitgen.data.get_regression_data()
-        training_model = getattr(circuitgen.models, args.model)
-        circuitgen.train.cross_Validation(input, output, training_model)
+        if args.method == "gnn" or args.model != "mlp":
+            print("cross validation only works for regression and self implemented models")
+
+        else:
+            input, output = circuitgen.data.get_regression_data()
+            training_model = getattr(circuitgen.models, args.model)
+            training_method = getattr(circuitgen.train, args.method)
+
+            training_method(input, output, training_model,True)
 
 
 if __name__ == "__main__":

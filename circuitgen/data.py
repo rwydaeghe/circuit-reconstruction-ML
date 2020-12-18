@@ -4,7 +4,7 @@ import spicepy.netlist as ntl
 from spicepy.netsolve import net_solve
 import numpy as np
 import pickle
-
+import circuitgen
 def get_regression_data():
 
     f_features = open("data/input/regression_data/charizard_features.pkl", "rb")
@@ -30,8 +30,16 @@ def read_netlist(dirpath):
                 output.append(values[-1])
     return input, output
 
+def get_gnn_data(type):
+    f_features = open("data/input/bulbasaur_data/bulbasaur_features.pkl", "rb")
+    f_topology = open("data/input/bulbasaur_data/bulbasaur_topology.pkl", "rb")
+    features = pickle.load(f_features)
+    topology = pickle.load(f_topology)
+    if type == "no_edges":
+        input_graphs = circuitgen.gnn.create_no_edgefeatures_graphs(features,topology)
+    else:
+        input_graphs = circuitgen.gnn.create_no_nodefeatures_graphs(features,topology)
 
-def read_transiant_analyses(dirpath):
-    # not sure how to read this data yet
-    return
+    target_graphs = circuitgen.gnn.convert_to_graph_data(features,topology)
+    return input_graphs,target_graphs
 
