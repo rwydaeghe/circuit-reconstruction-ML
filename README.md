@@ -3,7 +3,6 @@
 
 
 Training network: python circuit_reconstruction.py [operation] [method] [model].
-Training network: python circuit_reconstruction.py [operation] [method] [model].
 
 For example: 
 ```bash
