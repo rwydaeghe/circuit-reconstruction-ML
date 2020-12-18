@@ -49,7 +49,7 @@ def train(dirpath, model):
     return
 
 
-def mlp(input_features, input_values, training_model):
+def regression(input_features, input_values, training_model,cross):
     features = []
     for circuit in input_features.values():
         if len(circuit["zeros_re"]) == 0:
@@ -74,23 +74,28 @@ def mlp(input_features, input_values, training_model):
             filtered_features.append(feature)
             filtered_values.append(values[i])
 
-    # # #cross_Validation(features,values)
 
     train_features = np.array(filtered_features[:400])
     train_values = np.array(filtered_values[:400])
     test_features = np.array(filtered_features[401:])
     test_values = np.array(filtered_values[401:])
-    
+    padded_features = keras.preprocessing.sequence.pad_sequences(filtered_features, maxlen=5)
     padded_train_features = keras.preprocessing.sequence.pad_sequences(train_features, maxlen=5)
     padded_test_features = keras.preprocessing.sequence.pad_sequences(test_features, maxlen=5)
+    if cross:
+        cross_Validation(padded_features,filtered_values,training_model=training_model)
 
-    model = training_model()
-    model.fit(padded_train_features, train_values,epochs=300, batch_size=1)
-    model.summary()
-    for i in range(len(test_features)):
-        predict = model.predict(np.reshape(padded_test_features[i],(1,5)))
-        print(test_values[i])
-        print(predict)
+    else:
+        model = training_model()
+        try:
+            model.fit(padded_train_features, train_values,epochs=300, batch_size=1)
+            model.summary()
+        except:
+            model.fit(padded_train_features, train_values)
+        for i in range(len(test_features)):
+            predict = model.predict(np.reshape(padded_test_features[i],(1,5)))
+            print(test_values[i])
+            print(predict)
 
 
 def regression_chain(features, data):
@@ -118,22 +123,24 @@ def cross_Validation(input, output, training_model):
     fold_no = 1
     acc_per_fold = []
     loss_per_fold = []
-    circuit1 = input["circuit_1"]
-    features = [np.append(circuit1["zeros_re"][i], circuit1["poles_re"][i]).tolist() for i in
-                range(len(circuit1["zeros_re"]))]
-    values_circuit1 = output["circuit_1"]
-    values = [
-        np.append(values_circuit1["R1"][i], np.append(values_circuit1["L1"][i], values_circuit1["C1"][i])).tolist() for
-        i in range(len(values_circuit1["R1"]))]
-    # #cross_Validation(features,values)
-    input = np.array(features[1:])
-    output = np.array(values[1:])
-    output[:, 1] *= 1000
-    output[:, 2] *= 1000000
+    # print(input)
+    # circuit1 = input["circuit_1"]
+    # features = [np.append(circuit1["zeros_re"][i], circuit1["poles_re"][i]).tolist() for i in
+    #             range(len(circuit1["zeros_re"]))]
+    # values_circuit1 = output["circuit_1"]
+    # values = [
+    #     np.append(values_circuit1["R1"][i], np.append(values_circuit1["L1"][i], values_circuit1["C1"][i])).tolist() for
+    #     i in range(len(values_circuit1["R1"]))]
+    #
+    input = np.array(input)
+    output = np.array(output)
+
     for train, test in kfold.split(input, output):
+
         model = training_model()
         print('------------------------------------------------------------------------')
         print(f'Training for fold {fold_no} ...')
+
         history = model.fit(input[train], output[train], batch_size=1, epochs=300, verbose=1)
         scores = model.evaluate(input[test], output[test], verbose=0)
         print(
