@@ -35,6 +35,7 @@ def get_gnn_data():
     f_topology = open("data/input/bulbasaur_data/bulbasaur_topology.pkl", "rb")
     features = pickle.load(f_features)
     topology = pickle.load(f_topology)
-    graphs = circuitgen.gnn.convert_to_graph_data(features,topology)
-    return graphs
+    input_graphs = circuitgen.gnn.create_training_graphs(features,topology)
+    target_graphs = circuitgen.gnn.convert_to_graph_data(features,topology)
+    return input_graphs,target_graphs
 

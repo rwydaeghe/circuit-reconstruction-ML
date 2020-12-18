@@ -5,14 +5,56 @@ from graph_nets import blocks
 
 from graph_nets import graphs
 from graph_nets import modules
+from graph_nets import utils_tf
 from graph_nets import utils_np
 import sonnet as snt
+from graph_nets.demos_tf2 import models
+
+
+def create_training_graphs(features, topology):
+    comp_to_id = {'R': 1, 'L': 2, 'C': 3, 'V': 4}
+    comp_to_value = {'R': 50, 'L': 1e-3, 'C': 1e-6, 'V': 0}
+    graphs_list = []
+    for circuit in range(len(features.keys())):
+        circuit_features = features["circuit_{}".format(circuit + 1)]
+        circuit_topology = topology["circuit_{}".format(circuit + 1)]
+        nodes = []
+        edges = []
+        senders = []
+        receivers = []
+        for sender, receiver in circuit_topology.items():
+            for i in range(len(receiver)):
+                senders.append(float(sender))
+                receivers.append(float(receiver[i][1]))
+                edges.append([float(comp_to_id[receiver[i][0][0]]), float(comp_to_value[receiver[i][0][0]])])
+        maximum = 0
+        for i in range(len(circuit_topology.keys())):
+            nodes.append([0.0])
+
+
+        for i in range(len(nodes)):
+            while len(nodes[i]) < 7:
+                nodes[i].append(0.0)
+
+        graph = {
+            "nodes": nodes,
+            "edges": edges,
+            "senders": senders,
+            "receivers": receivers,
+            "globals": [0.0, 0.0, 0.0]
+        }
+        graphs_list.append(graph)
+
+    graphs_tuple = utils_np.data_dicts_to_graphs_tuple(graphs_list)
+    graphs_tuple = tree.map_structure(lambda x: tf.constant(x) if x is not None else None, graphs_tuple)
+    return graphs_tuple
+
 
 def convert_to_graph_data(features, topology):
     comp_to_id = {'R': 1, 'L': 2, 'C': 3,'V': 4}
+    comp_to_value = {'R': 50, 'L': 1e-3, 'C': 1e-6, 'V':0}
     graphs_list = []
     for circuit in range(len(features.keys())):
-        print(circuit)
         circuit_features = features["circuit_{}".format(circuit+1)]
         circuit_topology = topology["circuit_{}".format(circuit+1)]
         nodes = []
@@ -23,7 +65,7 @@ def convert_to_graph_data(features, topology):
             for i in range(len(receiver)):
                 senders.append(float(sender))
                 receivers.append(float(receiver[i][1]))
-                edges.append([float(comp_to_id[receiver[i][0][0]])])
+                edges.append([float(comp_to_id[receiver[i][0][0]]),float(comp_to_value[receiver[i][0][0]])])
         maximum = 0
         for i in range(len(circuit_topology.keys())):
             if 'node_{}'.format(i) not in circuit_features:
@@ -52,7 +94,6 @@ def convert_to_graph_data(features, topology):
             "receivers": receivers,
             "globals": [0.0,0.0,0.0]
         }
-        print(edges)
         graphs_list.append(graph)
 
     graphs_tuple = utils_np.data_dicts_to_graphs_tuple(graphs_list)
@@ -61,16 +102,47 @@ def convert_to_graph_data(features, topology):
     return graphs_tuple
 
 
-def train_gnn(input_graphs):
-    graph_network = modules.GraphNetwork(
-        edge_model_fn=lambda: snt.nets.MLP(output_sizes=[32,32]),
-        node_model_fn=lambda: snt.nets.MLP(output_sizes=[32,32]),
-        global_model_fn=lambda: snt.nets.MLP(output_sizes=[32,32]))
-    output_graphs = graph_network(input_graphs)
-    print(f"Output edges size: {output_graphs.edges.shape[-1]}")
-    print(f"Output nodes size: {output_graphs.nodes.shape[-1]}")
-    print(f"Output globals size: {output_graphs.globals.shape[-1]}")
-    print_graphs_tuple(output_graphs)
+def train_gnn(input_graphs,target_graphs):
+    # Optimizer.
+    learning_rate = 1e-3
+    optimizer = snt.optimizers.Adam(learning_rate)
+
+    model = models.EncodeProcessDecode(node_output_size=7)
+
+    def create_loss(target, outputs):
+        loss = [
+            tf.compat.v1.losses.mean_squared_error(target.nodes, output.nodes)
+            for output in outputs
+        ]
+        return tf.stack(loss)
+
+    def update_step(inputs_tr, targets_tr):
+        with tf.GradientTape() as tape:
+            outputs_tr = model(inputs_tr,10)
+            # Loss.
+            loss_tr = create_loss(targets_tr, outputs_tr)
+            loss_tr = tf.math.reduce_sum(loss_tr) / 10
+        # update model using loss
+        gradients = tape.gradient(loss_tr, model.trainable_variables)
+        optimizer.apply(gradients, model.trainable_variables)
+        return outputs_tr, loss_tr
+
+    for iteration in range(10):
+
+        inputs_tr = utils_tf.get_graph(input_graphs, slice(0, 80))
+        targets_tr = utils_tf.get_graph(target_graphs, slice(0, 80))
+
+        outputs_tr, loss_tr = update_step(inputs_tr, targets_tr)
+        print(loss_tr)
+
+
+    # node_block = blocks.NodeBlock(
+    #     node_model_fn=lambda: snt.nets.MLP(output_sizes=[8,8]))
+    # output_graphs = node_block(input_graphs)
+    # print(f"Output edges size: {output_graphs.edges.shape[-1]}")
+    # print(f"Output nodes size: {output_graphs.nodes.shape[-1]}")
+    # print(f"Output globals size: {output_graphs.globals.shape[-1]}")
+    # print_graphs_tuple(output_graphs)
 
 
 def print_graphs_tuple(graphs_tuple):

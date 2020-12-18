@@ -35,8 +35,9 @@ def main():
     if args.operation == "train":
         training_method = getattr(circuitgen.train, args.model)
         training_model = getattr(circuitgen.models, args.model)
-        input, output = circuitgen.data.get_regression_data()
-        training_method(input, output, training_model)
+        input_graphs, target_graphs = circuitgen.data.get_gnn_data()
+        circuitgen.gnn.train_gnn(input_graphs, target_graphs)
+       # training_method(input, output, training_model)
     elif args.operation == "evaluate":
         input, output = circuitgen.data.get_regression_data()
         training_model = getattr(circuitgen.models, args.model)
